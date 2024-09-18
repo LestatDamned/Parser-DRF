@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import SearchArticles, OneArticle
+from .models import Article, HistorySearch
 
-admin.site.register(OneArticle)
-admin.site.register(SearchArticles)
+admin.site.register(Article)
+admin.site.register(HistorySearch)

@@ -51,10 +51,11 @@ def parsing(url):
                              f'Комментарий: {comment.find(class_="tm-comment__body-content").text}'))
 
     result_dict = {
+        'article_link': article_link,
+        'title': article_title,
         'author_profile': article_author_profile,
         'author': article_author,
         'author_rating': article_author_rating,
-        'title': article_title,
         'content': article_body,
         'date': article_date,
         'rating': article_rating,
@@ -98,11 +99,10 @@ def parsing_one_article(searching_keyword,searching_filter='relevance'):
 # print(parsing_one_article('django'))
 
 
-def parsing_list_articles_new(searching_keyword,searching_filter='relevance'):
+def parsing_list_articles(searching_keyword,searching_filter='relevance'):
     """Функция для парсинга статьи"""
 
     url = f'https://habr.com/ru/search/?q={searching_keyword}&target_type=posts&order={searching_filter}'
-
 
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"

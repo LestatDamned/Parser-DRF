@@ -1,53 +1,16 @@
 from celery.result import AsyncResult
-from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
-from rest_framework import generics, status, viewsets
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import SearchArticles
-from .parser_script import parsing_one_article, parsing_list_articles_new
-from .serializers import SearchArticleSerializer, ArticleDetailSerializer
+from .models import Article, HistorySearch
+from .serializers import HistorySearchSerializer, ArticleDetailSerializer, ArticleSerializer
 from .tasks import start_parser, start_list_parser
 
 
 def index(request):
     return HttpResponse('Hello World!')
-
-class ParsingResultAPI(APIView):
-
-    def get_queryset(self,pk):
-        query = get_object_or_404(SearchArticles, id=pk)
-        return query
-
-
-    def get(self,request,pk=None):
-        query = self.get_queryset(pk)
-        if query.parsing_options == 'list':
-            task = start_list_parser.delay(query.searching_key)
-            return Response({'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
-        else:
-            task = start_parser.delay(query.searching_key)
-            return Response({'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
-
-
-
-class SearchAPIViewSet(viewsets.ViewSet):
-    serializer_class = SearchArticleSerializer
-
-    def list(self, request):
-        queryset = SearchArticles.objects.filter(user=request.user)
-        serializer = SearchArticleSerializer(queryset, many=True)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-    def create(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 
 
 class ParsingStatusAPI(APIView):
@@ -57,6 +20,46 @@ class ParsingStatusAPI(APIView):
         if task.state == 'PENDING':
             return Response({'status':task.state}, status=status.HTTP_202_ACCEPTED)
         elif task.state == 'SUCCESS':
-            if task.result == {'message': 'По вашему запросы статьи не найдены'}:
-                return Response(task.result, status=status.HTTP_200_OK)
-            return Response(ArticleDetailSerializer(task.result, many=True).data, status=status.HTTP_200_OK)
+
+            return Response({'status':task.state, "result_id": task.result}, status=status.HTTP_202_ACCEPTED)
+
+
+class StartParsing(APIView):
+    serializer_class = HistorySearchSerializer
+
+    def post(self, request):
+        serializer = HistorySearchSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = self.perform_create(serializer)
+        search_key = serializer.data['searching_key']
+        if serializer.data['parsing_options'] == 'list':
+            task = start_list_parser.delay(search_key,self.request.user.id,instance.id)
+            return Response({'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+        elif serializer.data['parsing_options'] == 'first':
+            task = start_parser.delay(search_key,self.request.user.id,instance.id)
+            return Response({'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+
+    def perform_create(self, serializer):
+        instance = serializer.save(user=self.request.user)
+        return instance
+
+
+class ParsingResult(APIView):
+
+    def get(self, request, result_id):
+        result = HistorySearch.objects.get(id=result_id)
+        if result.parsing_options == 'list':
+            result = Article.objects.filter(search_id=result_id)
+            return Response({"articles": ArticleSerializer(result, many=True).data})
+        return Response({"article": ArticleSerializer(result).data})
+
+
+class HistorySearchAPI(APIView):
+    def get(self,request):
+        result_list = HistorySearch.objects.filter(user=request.user)
+        return Response({"searching_history": HistorySearchSerializer(result_list,many=True).data})
+
+class HistoryArticles(APIView):
+    def get(self,request):
+        result_list = Article.objects.filter(user=request.user)
+        return Response({"articles": ArticleDetailSerializer(result_list,many=True).data})

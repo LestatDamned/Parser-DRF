@@ -6,6 +6,7 @@ app = Celery('ParserdjangoProject', broker_connection_retry=False,
              broker_connection_retry_on_startup=True, )
 app.config_from_object('django.conf:settings', namespace='CELERY')
 broker_connection_retry = False
+app.conf.update(result_extended=True)
 
 app.autodiscover_tasks()
 
