@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'parser.apps.ParserConfig',
     'debug_toolbar',
     'rest_framework',
-    'django_celery_results'
+    'django_celery_results',
+    'drf_spectacular'
 ]
 
 MIDDLEWARE = [
@@ -141,6 +142,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 INTERNAL_IPS = ['127.0.0.1']
 
 REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 2,
+
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
@@ -152,7 +156,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ]
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 
 }
 
@@ -212,4 +217,10 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/1",
     }
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Parsing Habr API Project",
+    "DESCRIPTION": "A sample parsing project to learn about DRF",
+    "VERSION": "1.0.0",
 }

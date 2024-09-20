@@ -40,7 +40,6 @@ def parsing(url):
     filtered_comments = [comment for comment in all_comments if comment.find(class_=rating_find_alias) is not None]
     sorted_list_comments = sorted(filtered_comments, key=lambda x: int(x.find(class_=rating_find_alias).text)
                                   , reverse=True)
-
     if len(sorted_list_comments) > 5:
         sorted_list_comments = sorted_list_comments[:5]
 
@@ -84,13 +83,13 @@ def parsing_one_article(searching_keyword,searching_filter='relevance'):
 
     soup = BeautifulSoup(src, 'lxml')
 
-    """Проверяем если статьи по запросу"""
+    # Проверяем если статьи по запросу
     no_articles = soup.find('div',class_='tm-empty-placeholder__text')
     if no_articles:
         return {'message': 'По вашему запросы статьи не найдены'}
 
 
-    """Находим первую статью"""
+    # Находим первую статью
     first_article = soup.find('a',class_='tm-title__link')['href']
 
     return parsing(first_article)
@@ -100,7 +99,7 @@ def parsing_one_article(searching_keyword,searching_filter='relevance'):
 
 
 def parsing_list_articles(searching_keyword,searching_filter='relevance'):
-    """Функция для парсинга статьи"""
+    """Функция для парсинга списка статьей"""
 
     url = f'https://habr.com/ru/search/?q={searching_keyword}&target_type=posts&order={searching_filter}'
 
@@ -116,25 +115,23 @@ def parsing_list_articles(searching_keyword,searching_filter='relevance'):
 
     soup = BeautifulSoup(src, 'lxml')
 
-    """Проверяем если статьи по запросу"""
+    # Проверяем если статьи по запросу
     no_articles = soup.find('div',class_='tm-empty-placeholder__text')
     if no_articles:
         return {'message': 'По вашему запросы статьи не найдены'}
 
-    """Находим все статьи"""
+    # Находим все статьи
     find_articles = soup.find_all('article',class_="tm-articles-list__item")
 
     article_list = []
 
     for article in find_articles:
-        """Находим статью"""
+        # Находим статью
         article = article.find('a',class_='tm-title__link')['href']
         article_list.append(parsing(article))
-
-
 
     return article_list
 
 
 # pprint(parsing_list_articles_new('Python'))
-# pprint(parsing_one_article('Python'))
+# pprint(parsing_one_article('fsafsdfsadfs'))

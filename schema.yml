@@ -1,0 +1,406 @@
+openapi: 3.0.3
+info:
+  title: Parsing Habr API Project
+  version: 1.0.0
+  description: A sample parsing project to learn about DRF
+paths:
+  /api/token/:
+    post:
+      operationId: token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/token/refresh/:
+    post:
+      operationId: token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/token/verify/:
+    post:
+      operationId: token_verify_create
+      description: |-
+        Takes a token and indicates if it is valid.  This view provides no
+        information about a token's fitness for a particular use.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenVerify'
+          description: ''
+  /api/v1/history/articles/:
+    get:
+      operationId: v1_history_articles_retrieve
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleDetail'
+          description: ''
+  /api/v1/history/searches/:
+    get:
+      operationId: v1_history_searches_retrieve
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistorySearch'
+          description: ''
+  /api/v1/parsing/:
+    post:
+      operationId: v1_parsing_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HistorySearch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HistorySearch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HistorySearch'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistorySearch'
+          description: ''
+  /api/v1/result/{result_id}/:
+    get:
+      operationId: v1_result_retrieve
+      parameters:
+      - in: path
+        name: result_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+          description: ''
+  /api/v1/status/{task_id}/:
+    get:
+      operationId: v1_status_retrieve
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsingStatus'
+          description: ''
+components:
+  schemas:
+    Article:
+      type: object
+      properties:
+        article_link:
+          type: string
+          format: uri
+          description: Ссылка на статью
+          maxLength: 200
+        title:
+          type: string
+          description: Название статьи
+        author_profile:
+          type: string
+          format: uri
+          description: Ссылка на профиль автора
+          maxLength: 200
+        author:
+          type: string
+          description: Имя автора
+        author_rating:
+          type: string
+          description: Рейтинг автора
+        content:
+          type: string
+          description: Содержание стать
+        date:
+          type: string
+          description: Дата публикации
+        rating:
+          type: string
+          description: Рейтинг статьи
+        bookmarks:
+          type: string
+          description: Количество добавления в закладки
+        comments:
+          type: string
+          description: Комментарии
+      required:
+      - article_link
+      - author
+      - author_profile
+      - author_rating
+      - bookmarks
+      - comments
+      - content
+      - date
+      - rating
+      - title
+    ArticleDetail:
+      type: object
+      properties:
+        search_id:
+          type: integer
+          nullable: true
+        article_link:
+          type: string
+          format: uri
+          description: Ссылка на статью
+          maxLength: 200
+        title:
+          type: string
+          description: Название статьи
+        author_profile:
+          type: string
+          format: uri
+          description: Ссылка на профиль автора
+          maxLength: 200
+        author:
+          type: string
+          description: Имя автора
+        author_rating:
+          type: string
+          description: Рейтинг автора
+        content:
+          type: string
+          description: Содержание стать
+        date:
+          type: string
+          description: Дата публикации
+        rating:
+          type: string
+          description: Рейтинг статьи
+        bookmarks:
+          type: string
+          description: Количество добавления в закладки
+        comments:
+          type: string
+          description: Комментарии
+      required:
+      - article_link
+      - author
+      - author_profile
+      - author_rating
+      - bookmarks
+      - comments
+      - content
+      - date
+      - rating
+      - title
+    HistorySearch:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+          readOnly: true
+        searching_key:
+          type: string
+          description: Поисковый запрос
+        searching_filter:
+          allOf:
+          - $ref: '#/components/schemas/SearchingFilterEnum'
+          description: |-
+            Способ фильтрации
+
+            * `relevance` - relevance
+            * `date` - date
+            * `rating` - rating
+        parsing_options:
+          allOf:
+          - $ref: '#/components/schemas/ParsingOptionsEnum'
+          description: |-
+            Как парсить
+
+            * `list` - list_of_articles
+            * `first` - first_article
+      required:
+      - id
+      - searching_key
+      - user
+    ParsingOptionsEnum:
+      enum:
+      - list
+      - first
+      type: string
+      description: |-
+        * `list` - list_of_articles
+        * `first` - first_article
+    ParsingStatus:
+      type: object
+      properties:
+        status:
+          type: string
+        result_id:
+          type: string
+      required:
+      - status
+    SearchingFilterEnum:
+      enum:
+      - relevance
+      - date
+      - rating
+      type: string
+      description: |-
+        * `relevance` - relevance
+        * `date` - date
+        * `rating` - rating
+    TokenObtainPair:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - password
+      - refresh
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
+    TokenVerify:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+      required:
+      - token
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
