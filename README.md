@@ -34,3 +34,45 @@ API реализовано с использованием Django REST Framework
 - **Swagger** для документации API
 
 ## Установка
+1. **Клонировать репозиторий**:
+    
+    git clone https://github.com/LestatDamned/Parser-DRF
+   
+2. **Создайте и активируйте виртуальное окружение**:
+
+    python -m venv venv
+    source venv/scripts/activate
+
+3. **Создать файл .env в корневой директории**: 
+
+    DEBUG: режим отладки (True/False)
+    SECRET_KEY: секретный ключ Django
+    DB_NAME: имя базы данных PostgreSQL
+    DB_USER: пользователь базы данных
+    DB_PASSWORD: пароль для пользователя базы данных
+    DB_HOST: хост базы данных (обычно db)
+    DB_PORT: порт базы данных (обычно 5432)
+    И другие необходимые переменные.
+
+4. **Установите зависимости**:
+
+    cd app
+    pip install -r requirements.txt
+
+5. **Запустить Docker Compose**: 
+
+    docker-compose -f docker-compose.prod.yml up --build
+
+
+6. **Создать суперпользователя Django**:
+
+    docker-compose exec web python manage.py createsuperuser
+
+7. **Проверить работу API**: 
+Откройте браузер и перейдите по адресу http://localhost:8000/schema/swagger/, 
+чтобы ознакомиться с документацией API, предоставляемой Swagger.
+
+8. **Тестирование API**:
+Вы можете использовать Postman для тестирования API, 
+отправляя запросы на конечные точки, указанные в документации.
+

@@ -1,0 +1,60 @@
+# Задаём имя проекта
+name: parser-drf
+
+services:
+  web:
+    # Указываем директорию ./app, в которой содержится Dockerfile для сборки образа
+    build: ./app
+    # Запускаем встроенный сервер Django
+    command: python manage.py runserver 0.0.0.0:8000
+    # Пробрасываем 8000 порт контейнера на 8000 порт локалхоста(127.0.0.1:8000)
+    ports:
+      - "127.0.0.1:8000:8000"
+    # Файл содержащий переменные окружения для контейнера
+    env_file:
+      - .env
+    # Дожидаемся запуска контейнера db
+    depends_on:
+      - db
+
+  db:
+    # Берём образ БД PostgreSQL версии 15
+    image: postgres:15
+    # Примонтируем том postgres-data к директории /var/lib/postgresql/data контейнера db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # Файл содержащий переменные окружения для контейнера
+    env_file:
+      - .env
+    # Используем значения переменных окружения из .env файла
+    environment:
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_DB=${SQL_DATABASE}
+
+  redis:
+    image: redis:alpine
+
+  celery:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    command: celery -A ParserdjangoProject worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
+
+  swagger:
+    image: swaggerapi/swagger-ui
+    environment:
+      API_URL: http://localhost:8000/schema/swagger/
+    ports:
+      - "8080:8080"
+    depends_on:
+      - web
+
+volumes:
+  # Объявляем том postgres-data для хранения данных PostgreSQL
+  postgres-data:
