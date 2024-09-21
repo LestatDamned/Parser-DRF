@@ -47,13 +47,21 @@ API реализовано с использованием Django REST Framework
 
 3. **Создать файл .env в корневой директории**: 
     ```
-    DEBUG=True/False
-    SECRET_KEY=ваш_секретный_ключ
-    DB_NAME=имя_базы_данных
-    DB_USER=пользователь_базы_данных
-    DB_PASSWORD=пароль_для_пользователя_базы_данных
-    DB_HOST=db
-    DB_PORT=5432
+    SECRET_KEY = 'secret_key'
+    DEBUG = True
+    DJANGO_ALLOWED_HOSTS = 'your_host'
+    CSRF_TRUSTED_ORIGINS = 'http://your_host'
+    
+    SQL_ENGINE="django.db.backends.postgresql"
+    SQL_DATABASE="example"
+    SQL_USER="example"
+    SQL_PASSWORD="password_example"
+    SQL_HOST="db"
+    SQL_PORT="5432"
+    DATABASE="postgres"
+    
+    INTERNAL_IPS = 'your_host'
+    
     ```
 
 4. **Установите зависимости**:
