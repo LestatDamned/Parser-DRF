@@ -6,7 +6,8 @@ from .views import *
 
 urlpatterns = [
     path('', index, name='index'),
-    path('api/v1/parsing/', StartParsing.as_view(), name='parsing-api-search'),
+    path('api/v1/create_user/', CreateUser.as_view(), name='create_user'),
+    path('api/v1/parsing/', StartParsing.as_view(), name='start_parsing'),
     path('api/v1/parsing/status/<str:task_id>/',ParsingStatusAPI.as_view(), name='status-api-search'),
     path('api/v1/parsing/result/<int:result_id>/',ParsingResult.as_view(), name='result-api-search'),
     path('api/v1/history/searches/', HistorySearchAPI.as_view(), name='history-search-api'),

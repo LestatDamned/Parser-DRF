@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from .models import Article, HistorySearch
@@ -36,3 +37,9 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
 class ParsingStatusSerializer(serializers.Serializer):
     status = serializers.CharField()
     result_id = serializers.CharField(required=False)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("username", "email", "password")

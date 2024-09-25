@@ -1,12 +1,13 @@
 from celery.result import AsyncResult
 from django.http import HttpResponse
-from rest_framework import status, generics
+from rest_framework import status, generics, permissions
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Article, HistorySearch
-from .serializers import HistorySearchSerializer, ArticleDetailSerializer, ArticleSerializer, ParsingStatusSerializer
+from .serializers import (HistorySearchSerializer, ArticleDetailSerializer, ArticleSerializer, ParsingStatusSerializer,
+                          UserSerializer)
 from .tasks import start_parser, start_list_parser
 
 
@@ -115,3 +116,9 @@ class UserSearchHistoryAPI(generics.RetrieveAPIView):
     def get_queryset(self):
         user = self.request.user
         return HistorySearch.objects.filter(user=user)
+
+
+class CreateUser(generics.CreateAPIView):
+    """Создание пользователя"""
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = UserSerializer
