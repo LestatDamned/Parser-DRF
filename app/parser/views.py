@@ -34,10 +34,10 @@ class StartParsing(APIView):
         search_key = serializer.data['searching_key']
         if serializer.data['parsing_options'] == 'list':
             task = start_list_parser.delay(search_key,self.request.user.id,instance.id)
-            return Response({'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+            return Response({'task_id': task.id}, status=status.HTTP_201_CREATED)
         elif serializer.data['parsing_options'] == 'first':
             task = start_parser.delay(search_key,self.request.user.id,instance.id)
-            return Response({'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+            return Response({'task_id': task.id}, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
         instance = serializer.save(user=self.request.user)

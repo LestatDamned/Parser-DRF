@@ -24,6 +24,9 @@ class HistorySearch(models.Model):
     def __str__(self):
         return f'{self.user} {self.searching_key}'
 
+    class Meta:
+        ordering = ['-id']
+
 
 
 class Article(models.Model):
@@ -45,5 +48,7 @@ class Article(models.Model):
     def __str__(self):
         return f"{self.title}: {self.author}"
 
+    class Meta:
+        ordering = ['-id']
 
 
