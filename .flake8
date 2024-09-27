@@ -4,7 +4,6 @@ ignore = E203, W503, E501
 exclude = .git, __pycache__, migrations, static, node_modules, .venv, env, venv
 max-complexity = 10
 
-django-settings-module = ParserdjangoProject.settings
+django-settings-module = ParserdjangoProject.app.ParserdjangoProject.settings
 
 import-order-style = google
-application-import-names = my_project
