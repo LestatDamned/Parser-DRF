@@ -72,12 +72,12 @@ API реализовано с использованием Django REST Framework
 
 5. **Запустить Docker Compose**: 
     ```bash
-    docker-compose -f docker-compose.prod.yml up --build
+    docker compose -f docker-compose.yml up --build
     ```
 
 6. **Создать суперпользователя Django**:
     ```bash
-    docker-compose exec web python manage.py createsuperuser
+    docker compose exec web python manage.py createsuperuser
     ```
 
 7. **Проверить работу API**: 
