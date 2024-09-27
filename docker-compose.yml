@@ -12,14 +12,9 @@ services:
       - "127.0.0.1:8000:8000"
     # Файл содержащий переменные окружения для контейнера
     env_file:
-      - .env.prod
+      - .env.example
     environment:
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
-      - POSTGRES_USER=${SQL_USER}
-      - POSTGRES_PASSWORD=${SQL_PASSWORD}
-      - POSTGRES_DB=${SQL_DATABASE}
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=django-db
     # Дожидаемся запуска контейнера db
     depends_on:
       - db
@@ -32,7 +27,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
     # Файл содержащий переменные окружения для контейнера
     env_file:
-      - .env.prod
+      - .env.example
     # Используем значения переменных окружения из .env файла
     environment:
       - POSTGRES_USER=${SQL_USER}
@@ -46,15 +41,13 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-    command: ["celery", "-A", "ParserdjangoProject", "worker", "--loglevel=info"]
+    command: ["celery", "-A", "ParserdjangoProject", "worker", "--loglevel=info",
+              "./wait-for-it.sh", "db:5432", "--", "python", "manage.py", "migrate"]
     volumes:
       - .:/app
     depends_on:
       - redis
       - db
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=django-db
 
   swagger:
     image: swaggerapi/swagger-ui
