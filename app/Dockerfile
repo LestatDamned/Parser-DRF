@@ -1,19 +1,24 @@
-# pull the official base image
+# Используем официальный образ Python на базе Alpine
 FROM python:3.12.0-alpine
 
-# set work directory
+# Устанавливаем рабочую директорию
 WORKDIR /usr/src/app
 
-# set environment variables
+# Устанавливаем переменные окружения
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# install dependencies
+# Обновляем pip
 RUN pip install --upgrade pip
-COPY requirements.txt /usr/src/app
+
+# Копируем файл с зависимостями
+COPY requirements.txt /usr/src/app/
+
+# Устанавливаем зависимости
 RUN pip install -r requirements.txt
-RUN python manage.py migrate
 
-# copy project
-COPY .. /usr/src/app
+# Копируем всё содержимое проекта
+COPY . /usr/src/app/
 
+# Выполняем миграции базы данных
+#RUN python manage.py migrate

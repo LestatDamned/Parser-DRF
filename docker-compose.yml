@@ -13,6 +13,8 @@ services:
     # Файл содержащий переменные окружения для контейнера
     env_file:
       - .env
+    environment:
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
     # Дожидаемся запуска контейнера db
     depends_on:
       - db
@@ -39,7 +41,8 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-    command: celery -A ParserdjangoProject worker --loglevel=info
+    command: ["celery", "-A", "ParserdjangoProject", "worker", "--loglevel=info",
+              "./wait-for-it.sh", "db:5432", "--", "python", "manage.py", "migrate"]
     volumes:
       - .:/app
     depends_on:

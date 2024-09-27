@@ -1,1 +1,1 @@
-from ParserdjangoProject.settings.default_settings import *
+from ParserdjangoProject.settings.prod_settings import *
