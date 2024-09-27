@@ -12,7 +12,7 @@ services:
       - "127.0.0.1:8000:8000"
     # Файл содержащий переменные окружения для контейнера
     env_file:
-      - .env
+      - .env.example
     # Дожидаемся запуска контейнера db
     depends_on:
       - db
@@ -25,7 +25,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
     # Файл содержащий переменные окружения для контейнера
     env_file:
-      - .env
+      - .env.example
     # Используем значения переменных окружения из .env файла
     environment:
       - POSTGRES_USER=${SQL_USER}
