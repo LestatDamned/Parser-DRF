@@ -15,6 +15,11 @@ services:
       - .env
     environment:
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_DB=${SQL_DATABASE}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=django-db
     # Дожидаемся запуска контейнера db
     depends_on:
       - db
@@ -41,13 +46,15 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-    command: ["celery", "-A", "ParserdjangoProject", "worker", "--loglevel=info",
-              "./wait-for-it.sh", "db:5432", "--", "python", "manage.py", "migrate"]
+    command: ["celery", "-A", "ParserdjangoProject", "worker", "--loglevel=info"]
     volumes:
       - .:/app
     depends_on:
       - redis
       - db
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=django-db
 
   swagger:
     image: swaggerapi/swagger-ui
