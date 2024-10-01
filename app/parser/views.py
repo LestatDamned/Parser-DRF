@@ -1,5 +1,7 @@
 from celery.result import AsyncResult
 from django.http import HttpResponse
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 from rest_framework import status, generics, permissions
 from rest_framework.pagination import PageNumberPagination
@@ -54,6 +56,16 @@ class ParsingStatusAPI(APIView):
         elif task.state == "FAILURE":
             return Response({"status": task.state}, status=status.HTTP_400_BAD_REQUEST)
         elif task.state == "SUCCESS":
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'user_{self.request.user.id}',
+                {
+                    'type': 'parsing_status',
+                    'status': task.state,
+                    'task_id': task.id,
+                    'result': task.result,
+                }
+            )
             return Response({"status": task.state, "result_id": task.result}, status=status.HTTP_202_ACCEPTED)
 
 

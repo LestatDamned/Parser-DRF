@@ -30,13 +30,11 @@ DEBUG = os.getenv('DEBUG') == 'True'
 
 ALLOWED_HOSTS = str(os.getenv('DJANGO_ALLOWED_HOSTS')).split(' ')
 
-CSRF_TRUSTED_ORIGINS = str(os.getenv('CSRF_TRUSTED_ORIGINS')).split(' ')
-
-
 # Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
+    'daphne',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -47,7 +45,8 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'rest_framework',
     'django_celery_results',
-    'drf_spectacular'
+    'drf_spectacular',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -81,6 +80,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ParserdjangoProject.wsgi.application'
+ASGI_APPLICATION = 'ParserdjangoProject.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -147,8 +147,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        # 'rest_framework.authentication.TokenAuthentication',
-        # 'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -218,3 +218,13 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
 }
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
+
+CSRF_TRUSTED_ORIGINS = str(os.getenv('CSRF_TRUSTED_ORIGINS')).split(' ')

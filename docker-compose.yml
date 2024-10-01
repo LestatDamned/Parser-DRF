@@ -2,22 +2,22 @@
 name: parser-drf
 
 services:
-  web:
-    # Указываем директорию ./app, в которой содержится Dockerfile для сборки образа
-    build: ./app
-    # Запускаем встроенный сервер Django
-    command: python manage.py runserver 0.0.0.0:8000
-    # Пробрасываем 8000 порт контейнера на 8000 порт локалхоста(127.0.0.1:8000)
-    ports:
-      - "127.0.0.1:8000:8000"
-    # Файл содержащий переменные окружения для контейнера
-    env_file:
-      - .env.example
-    environment:
-      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
-    # Дожидаемся запуска контейнера db
-    depends_on:
-      - db
+#  web:
+#    # Указываем директорию ./app, в которой содержится Dockerfile для сборки образа
+#    build: ./app
+#    # Запускаем встроенный сервер Django
+#    command: python manage.py runserver 0.0.0.0:8000
+#    # Пробрасываем 8000 порт контейнера на 8000 порт локалхоста(127.0.0.1:8000)
+#    ports:
+#      - "127.0.0.1:8000:8000"
+#    # Файл содержащий переменные окружения для контейнера
+#    env_file:
+#      - .env.example
+#    environment:
+#      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
+#    # Дожидаемся запуска контейнера db
+#    depends_on:
+#      - db
 
   db:
     # Берём образ БД PostgreSQL версии 15
@@ -27,36 +27,38 @@ services:
       - postgres-data:/var/lib/postgresql/data
     # Файл содержащий переменные окружения для контейнера
     env_file:
-      - .env.example
+      - .env
     # Используем значения переменных окружения из .env файла
     environment:
       - POSTGRES_USER=${SQL_USER}
       - POSTGRES_PASSWORD=${SQL_PASSWORD}
       - POSTGRES_DB=${SQL_DATABASE}
+      - POSTGRES_HOST=${SQL_HOST}
+      - POSTGRES_PORT=${SQL_PORT}
 
   redis:
     image: redis:alpine
 
-  celery:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
-    command: ["celery", "-A", "ParserdjangoProject", "worker", "--loglevel=info",
-              "./wait-for-it.sh", "db:5432", "--", "python", "manage.py", "migrate"]
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
-      - db
+#  celery:
+#    build:
+#      context: ./app
+#      dockerfile: Dockerfile
+#    command: ["celery", "-A", "ParserdjangoProject", "worker", "--loglevel=info",
+#              "./wait-for-it.sh", "db:5432", "--", "python", "manage.py", "migrate"]
+#    volumes:
+#      - .:/app
+#    depends_on:
+#      - redis
+#      - db
 
-  swagger:
-    image: swaggerapi/swagger-ui
-    environment:
-      API_URL: http://localhost:8000/schema/swagger/
-    ports:
-      - "8080:8080"
-    depends_on:
-      - web
+#  swagger:
+#    image: swaggerapi/swagger-ui
+#    environment:
+#      API_URL: http://localhost:8000/schema/swagger/
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - web
 
 volumes:
   # Объявляем том postgres-data для хранения данных PostgreSQL
