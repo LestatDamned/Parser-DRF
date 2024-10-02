@@ -128,5 +128,147 @@ def parsing_list_articles(searching_keyword, searching_filter="relevance"):
 
     return article_list
 
+
 # pprint(parsing_list_articles_new("Python"))
 # pprint(parsing_one_article("fsafsdfsadfs"))
+
+
+from abc import ABC, abstractmethod
+
+
+class ArticleParser(ABC):
+    def __init__(self):
+        self.headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                      "image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
+            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",
+        }
+        self.url = ''
+        self.article_link = ''
+        self.article_comments = ''
+        self.soup = ''
+        self.soup_comments = ''
+        self.searching_keyword = ''
+        self.searching_filter = "relevance"
+        self.search_result = ''
+
+    def start_parsing(self):
+        self.get_url_searching()
+        self.check_and_get_available_article()
+        self.get_article_url()
+        self.prepare_to_parsing()
+        print(self.parsing_template())
+
+    def get_url_searching(self):
+        url = f"https://habr.com/ru/search/?q={self.searching_keyword}&target_type=posts&order={self.searching_filter}"
+        req = requests.get(url, headers=self.headers)
+        src = req.text
+        self.search_result = BeautifulSoup(src, "lxml")
+
+    @abstractmethod
+    def check_and_get_available_article(self, soup):
+        pass
+
+    @abstractmethod
+    def get_article_url(self, url):
+        pass
+
+    def prepare_to_parsing(self):
+        req = requests.get(self.article_link, headers=self.headers)
+        src = req.text
+        req_comments = requests.get(self.article_comments, headers=self.headers)
+        src_comments = req_comments.text
+        self.soup = BeautifulSoup(src, "lxml")
+        self.soup_comments = BeautifulSoup(src_comments, "lxml")
+
+    def parsing_template(self):
+        article_title = self.soup.find(class_="tm-title tm-title_h1").text
+        article_body = self.soup.find("div", id="post-content-body").get_text(strip=True)
+        article_author = self.soup.find(class_="tm-user-info__username").text
+        author_profile_link = self.soup.find(class_="tm-user-info__username")["href"]
+        article_author_profile = f"https://habr.com{author_profile_link}"
+        article_date_raw = self.soup.find(class_="tm-article-datetime-published")
+        article_date = article_date_raw.find("time")["title"]
+        try:
+            article_rating = self.soup.find("span", class_="tm-votes-meter__value").text
+        except AttributeError:
+            article_rating = None
+        article_author_rating = self.soup.find(class_="tm-votes-lever__score-counter "
+                                                 "tm-votes-lever__score-counter_rating "
+                                                 "tm-votes-lever__score-counter").text
+        article_bookmark = self.soup.find(class_="bookmarks-button__counter").text
+        all_comments = self.soup_comments.find_all(class_="tm-comment-thread")
+        rating_find_alias = ("tm-votes-meter__value tm-votes-meter__value_positive "
+                             "tm-votes-meter__value_appearance-comment "
+                             "tm-votes-meter__value_rating tm-votes-meter__value")
+        filtered_comments = [comment for comment in all_comments if comment.find(class_=rating_find_alias) is not None]
+        sorted_list_comments = sorted(filtered_comments, key=lambda x: int(x.find(class_=rating_find_alias).text)
+                                      , reverse=True)
+        if len(sorted_list_comments) > 5:
+            sorted_list_comments = sorted_list_comments[:5]
+
+        comment_list = []
+
+        for number, comment in enumerate(sorted_list_comments, start=1):
+            comment_list.append((f"Рейтинг: {comment.find(class_=rating_find_alias).text}",
+                                 f"Комментарий: {comment.find(class_="tm-comment__body-content").text}"))
+
+        result_dict = {
+            "article_link": self.article_link,
+            "title": article_title,
+            "author_profile": article_author_profile,
+            "author": article_author,
+            "author_rating": article_author_rating,
+            "content": article_body,
+            "date": article_date,
+            "rating": article_rating,
+            "bookmarks": article_bookmark,
+            "comments": comment_list,
+        }
+
+        return result_dict
+
+
+class ParsingOneArticle(ArticleParser):
+    def __init__(self,searching_keyword = '', searching_filter = "relevance"):
+        super().__init__()
+        self.searching_keyword = searching_keyword
+        self.searching_filter = searching_filter
+        self.search_result = ''
+
+    def check_and_get_available_article(self):
+        no_articles = self.search_result.find("div", class_="tm-empty-placeholder__text")
+        if no_articles:
+            return {"message": "По вашему запросы статьи не найдены"}
+
+        self.article_link = self.search_result.find("a", class_="tm-title__link")["href"]
+
+    def get_article_url(self):
+        self.article_comments = f"https://habr.com{self.article_link}comments/"
+        self.article_link = f"https://habr.com{self.article_link}"
+
+
+# a = ParsingOneArticle(searching_keyword="Python")
+# a.start_parsing()
+
+
+class ParsingListArticles(ArticleParser):
+    def __init__(self,searching_keyword = '', searching_filter = "relevance"):
+        super().__init__()
+        self.searching_keyword = searching_keyword
+        self.searching_filter = searching_filter
+
+    def check_and_get_available_article(self):
+        no_articles = self.search_result.find("div", class_="tm-empty-placeholder__text")
+        if no_articles:
+            return {"message": "По вашему запросы статьи не найдены"}
+        self.article_link = self.search_result.find_all("article", class_="tm-articles-list__item")
+
+    def get_article_url(self):
+        for article in self.article_link:
+            article_link = article.find("a", class_="tm-title__link")["href"]
+            self.article_comments = f"https://habr.com{article_link}comments/"
+            self.article_link = f"https://habr.com{article_link}"
+
+# a = ParsingListArticles(searching_keyword = 'Python')
+# a.start_parsing()
