@@ -1,6 +1,6 @@
 from celery.result import AsyncResult
 from django.http import HttpResponse
-from channels.layers import get_channel_layer
+from channels.layers import get_channel_layer, channel_layers
 from asgiref.sync import async_to_sync
 
 from rest_framework import status, generics, permissions
@@ -13,7 +13,7 @@ from .serializers import (HistorySearchSerializer, ArticleDetailSerializer, Arti
                           UserSerializer)
 from .tasks import start_parser, start_list_parser
 
-
+channel_layer = get_channel_layer()
 def index(request):
     return HttpResponse("Hello World!")
 
@@ -35,6 +35,15 @@ class StartParsing(APIView):
         search_key = serializer.data["searching_key"]
         if serializer.data["parsing_options"] == "list":
             task = start_list_parser.delay(search_key, self.request.user.id, instance.id)
+            async_to_sync(channel_layer.group_send)(
+                    f'user_{self.request.user.id}',
+                    {
+                        'type': 'parsing_status',
+                        'status': "PARSING",
+                        'task_id': "111",
+                        'result_id': task.id,
+                    }
+                )
             return Response({"task_id": task.id}, status=status.HTTP_201_CREATED)
         elif serializer.data["parsing_options"] == "first":
             task = start_parser.delay(search_key, self.request.user.id, instance.id)
@@ -56,16 +65,6 @@ class ParsingStatusAPI(APIView):
         elif task.state == "FAILURE":
             return Response({"status": task.state}, status=status.HTTP_400_BAD_REQUEST)
         elif task.state == "SUCCESS":
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f'user_{self.request.user.id}',
-                {
-                    'type': 'parsing_status',
-                    'status': task.state,
-                    'task_id': task.id,
-                    'result': task.result,
-                }
-            )
             return Response({"status": task.state, "result_id": task.result}, status=status.HTTP_202_ACCEPTED)
 
 

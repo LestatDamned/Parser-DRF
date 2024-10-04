@@ -21,11 +21,9 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ParserdjangoProject.settings')
 
 application = ProtocolTypeRouter({
     'http': get_asgi_application(),
-    'websocket': AllowedHostsOriginValidator(
-        jwt_auth_middleware(
+    'websocket': jwt_auth_middleware(
             URLRouter(ws_urlpatterns)
         ),
-    )
 })
 # application = ProtocolTypeRouter({
 #     'http': get_asgi_application(),

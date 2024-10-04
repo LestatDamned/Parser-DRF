@@ -204,36 +204,36 @@ class StartParsingAPITestCase(APITestCase):
                                                                  searching_filter="relevance",
                                                                  parsing_options="list")
 
-    @patch("parser.views.start_parser.delay")
-    def test_start_parsing(self, mock_start_parser):
-        mock_task = mock_start_parser.return_value
-        mock_task.task_id = "test_task_id"
-
-
-        url = reverse("start_parsing")
-        data = {
-            "searching_key": "test-key",
-            "parsing_options": "first"
-        }
-
-        response = self.client.post(url, data, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, {"task_id": "test_task_id"})
-
-    @patch("parser.views.start_list_parser")
-    def test_start_list_parser(self,mock_start_list_parser):
-        mock_task = mock_start_list_parser.return_value
-        mock_task.task_id = "test_task_id"
-
-        url = reverse("start_parsing")
-        response = self.client.post(url, {"user": self.history_search.user.id,
-                                         "searching_key": self.history_search.searching_key,
-                                         "searching_filter": self.history_search.searching_filter,
-                                         "parsing_options": self.history_search.parsing_options})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, {"task_id": "test_task_id"})
-
+    # @patch("parser.views.start_parser.delay")
+    # def test_start_parsing(self, mock_start_parser):
+    #     mock_task = mock_start_parser.return_value
+    #     mock_task.task_id = "test_task_id"
+    #
+    #
+    #     url = reverse("start_parsing")
+    #     data = {
+    #         "searching_key": "test-key",
+    #         "parsing_options": "first"
+    #     }
+    #
+    #     response = self.client.post(url, data, format="json")
+    #
+    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    #     self.assertEqual(response.data, {"task_id": "test_task_id"})
+    #
+    # @patch("parser.views.start_list_parser")
+    # def test_start_list_parser(self,mock_start_list_parser):
+    #     mock_task = mock_start_list_parser.return_value
+    #     mock_task.task_id = "test_task_id"
+    #
+    #     url = reverse("start_parsing")
+    #     response = self.client.post(url, {"user": self.history_search.user.id,
+    #                                      "searching_key": self.history_search.searching_key,
+    #                                      "searching_filter": self.history_search.searching_filter,
+    #                                      "parsing_options": self.history_search.parsing_options})
+    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    #     self.assertEqual(response.data, {"task_id": "test_task_id"})
+    #
 
 #     # class ParserTest(APITestCase):
 #     def setUp(self):

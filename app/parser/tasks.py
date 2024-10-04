@@ -1,6 +1,9 @@
+from asgiref.sync import async_to_sync
 from celery import shared_task
+from celery.result import AsyncResult
+from channels.layers import get_channel_layer
 
-from .parser_script import parsing_one_article, parsing_list_articles
+from .parser_script import parsing_one_article, parsing_list_articles, ParsingListArticles
 from .models import Article, User, HistorySearch
 
 
@@ -13,14 +16,37 @@ def start_parser(searching_key, user_id, search_id):
     return search_id
 
 
-@shared_task(name="parsing_list_articles")
-def start_list_parser(searching_key, user_id, search_id):
-    result = parsing_list_articles(searching_key)
+@shared_task(bind=True, name="parsing_list_articles")
+def start_list_parser(self, searching_key, user_id, search_id):
+    channel_layer = get_channel_layer()
+    self.update_state(state="PARSING")
+    async_to_sync(channel_layer.group_send)(
+        f'user_{user_id}',
+        {
+            'type': 'parsing_status',
+            'status': "PARSING",
+            'task_id': self.request.id,
+            'result_id': search_id,
+        }
+    )
+    parsing = ParsingListArticles(searching_keyword = searching_key)
+    result = parsing.start_parsing()
+    total_articles = len(result)
 
-    for article in result:
+
+    for number, article in enumerate(result, start=1):
         parsing_result_unpacking(article, user_id, search_id)
-
-    return search_id
+        # self.update_state(state="PROGRESS", meta={"number": number, "total": total_articles})
+        # async_to_sync(channel_layer.group_send)(
+        #     f'user_{user_id}',
+        #     {
+        #         'type': 'parsing_status',
+        #         'status': "PROGRESS",
+        #         'task_id': self.request.id,
+        #         'result_id': search_id,
+        #     }
+        # )
+        return search_id
 
 
 def parsing_result_unpacking(result, user_id, search_id):
@@ -38,3 +64,5 @@ def parsing_result_unpacking(result, user_id, search_id):
         bookmarks=result["bookmarks"],
         comments=result["comments"],
     )
+
+

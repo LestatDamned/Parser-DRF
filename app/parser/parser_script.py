@@ -152,13 +152,14 @@ class ArticleParser(ABC):
         self.search_result = ''
         self.amount = ''
         self.no_articles = False
+        self.result = []
 
     def start_parsing(self):
         self.get_url_searching()
         self.check_and_get_available_article()
         self.get_article_url()
         self.parsing_template()
-
+        return self.result
     @abstractmethod
     def check_and_get_available_article(self, soup):
         pass
@@ -231,7 +232,7 @@ class ArticleParser(ABC):
                     "comments": comment_list,
                 }
 
-                print(result_dict)
+                self.result.append(result_dict)
 
 
 class ParsingOneArticle(ArticleParser):
@@ -289,6 +290,6 @@ class ParsingListArticles(ArticleParser):
                 )
 
 
-
-# a = ParsingListArticles(searching_keyword='dffsdfsafdsa')
-# a.start_parsing()
+# a = ParsingListArticles(searching_keyword='Postman')
+# result = a.start_parsing()
+# print(result)

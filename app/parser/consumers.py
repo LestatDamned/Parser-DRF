@@ -1,5 +1,6 @@
 import json
 
+from celery.result import AsyncResult
 from channels.consumer import AsyncConsumer
 from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
 
@@ -26,27 +27,48 @@ class ParsingStatusConsumer(AsyncWebsocketConsumer):
         status = event['status']
         task_id = event['task_id']
         result_id = event['result_id']
-
         await self.send(text_data=json.dumps({
-            'status': status,
-            'task_id': task_id,
-            'result_id': result_id
+            'status': "Test",
+            "task_id": "124",
+            "result_id": "22",
         }))
 
 
-from channels.generic.websocket import WebsocketConsumer
+        # task_result = AsyncResult(task_id)
+        # if task_result.state == 'PARSING':
+        #     await self.send(text_data=json.dumps({
+        #         "progress": "10%",
+        #         "status": task_result.state,
+        #     }
+        #     ))
+        #
+        # elif task_result.state == "PROGRESS":
+        #     progress = task_result.info
+        #     current = progress.get('number', 0)
+        #     total = progress.get('total', 1)
+        #     await self.send(text_data=json.dumps({
+        #         "progress": current/total,
+        #         "status": status,
+        #     }))
+        # else:
+        #     await self.send(text_data=json.dumps({
+        #         'status': task_result,
+        #         'task_id': task_id,
+        #         'result_id': result_id
+        #     }))
 
-class SimpleWebSocketConsumer(WebsocketConsumer):
-    def connect(self):
-        if self.scope['user'].is_authenticated:
-            self.accept()
-        else:
-            self.close()  # Закрываем соединение, если пользователь не аутентифицирован
 
-    def disconnect(self, close_code):
+class TestConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.accept()
+        await self.send(text_data=json.dumps({
+            'message': 'WebSocket connection established!'
+        }))
+
+    async def disconnect(self, close_code):
         pass
 
-    def receive(self, text_data):
-        data = json.loads(text_data)
-        message = data.get('message', 'No message')
-        self.send(text_data=json.dumps({'message': f'You said: {message}'}))
+    async def receive(self, text_data):
+        await self.send(text_data=json.dumps({
+            'message': 'Received your message!'
+        }))
