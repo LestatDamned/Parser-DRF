@@ -14,6 +14,8 @@ from .serializers import (HistorySearchSerializer, ArticleDetailSerializer, Arti
 from .tasks import start_parser, start_list_parser
 
 channel_layer = get_channel_layer()
+
+
 def index(request):
     return HttpResponse("Hello World!")
 
@@ -36,14 +38,14 @@ class StartParsing(APIView):
         if serializer.data["parsing_options"] == "list":
             task = start_list_parser.delay(search_key, self.request.user.id, instance.id)
             async_to_sync(channel_layer.group_send)(
-                    f'user_{self.request.user.id}',
-                    {
-                        'type': 'parsing_status',
-                        'status': "PARSING",
-                        'task_id': "111",
-                        'result_id': task.id,
-                    }
-                )
+                f'user_{self.request.user.id}',
+                {
+                    'type': 'parsing_status',
+                    'status': "ACCEPTED",
+                    'task_id': task.id,
+                    'result_id': "to be determent",
+                }
+            )
             return Response({"task_id": task.id}, status=status.HTTP_201_CREATED)
         elif serializer.data["parsing_options"] == "first":
             task = start_parser.delay(search_key, self.request.user.id, instance.id)

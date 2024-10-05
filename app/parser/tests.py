@@ -191,6 +191,7 @@ class JWTauthenticationAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data["access"])
 
+
 class StartParsingAPITestCase(APITestCase):
     def setUp(self):
         self.user_test = User.objects.create(username="dabapps", email="dabapps@mail.ru")
@@ -199,10 +200,10 @@ class StartParsingAPITestCase(APITestCase):
         self.client.force_authenticate(user=self.user_test)
 
         self.history_search = HistorySearch.objects.create(user=self.user_test, searching_key="django",
-                                                            searching_filter="relevance", parsing_options="first")
+                                                           searching_filter="relevance", parsing_options="first")
         self.history_search_list = HistorySearch.objects.create(user=self.user_test, searching_key="django",
-                                                                 searching_filter="relevance",
-                                                                 parsing_options="list")
+                                                                searching_filter="relevance",
+                                                                parsing_options="list")
 
     # @patch("parser.views.start_parser.delay")
     # def test_start_parsing(self, mock_start_parser):

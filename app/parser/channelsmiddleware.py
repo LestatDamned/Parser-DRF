@@ -4,9 +4,9 @@ from channels.db import database_sync_to_async
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.authentication import JWTAuthentication
 
 User = get_user_model()
+
 
 class JWTAuthMiddleware:
     """
@@ -36,6 +36,7 @@ class JWTAuthMiddleware:
         # Добавляем пользователя в scope
         scope['user'] = user
         return await self.inner(scope, receive, send)
+
 
 # Используй этот middleware вместе с AuthMiddlewareStack
 def jwt_auth_middleware(inner):

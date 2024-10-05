@@ -22,8 +22,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ParserdjangoProject.settings')
 application = ProtocolTypeRouter({
     'http': get_asgi_application(),
     'websocket': jwt_auth_middleware(
-            URLRouter(ws_urlpatterns)
-        ),
+        URLRouter(ws_urlpatterns)
+    ),
 })
 # application = ProtocolTypeRouter({
 #     'http': get_asgi_application(),
@@ -31,5 +31,3 @@ application = ProtocolTypeRouter({
 #             URLRouter(ws_urlpatterns)
 #         ),
 # })
-
-

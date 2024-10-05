@@ -18,22 +18,27 @@ class ParsingStatusConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(
-            self.group_name,
-            self.channel_name,
-        )
+        await self.close()
+        # await self.channel_layer.group_discard(
+        #     self.group_name,
+        #     self.channel_name,
+        # )
 
     async def parsing_status(self, event):
         status = event['status']
         task_id = event['task_id']
         result_id = event['result_id']
         await self.send(text_data=json.dumps({
-            'status': "Test",
-            "task_id": "124",
-            "result_id": "22",
+            'status': status,
+            "task_id": task_id,
+            "result_id": result_id,
         }))
 
-
+    async def percent_message(self, event):
+        message = event['message']
+        await self.send(text_data=json.dumps({
+            'message': message,
+        }))
         # task_result = AsyncResult(task_id)
         # if task_result.state == 'PARSING':
         #     await self.send(text_data=json.dumps({

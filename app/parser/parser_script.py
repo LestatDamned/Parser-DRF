@@ -1,6 +1,9 @@
 import requests
 from pprint import pprint
+
+from asgiref.sync import async_to_sync
 from bs4 import BeautifulSoup
+from channels.layers import get_channel_layer
 
 
 def parsing(url):
@@ -160,6 +163,7 @@ class ArticleParser(ABC):
         self.get_article_url()
         self.parsing_template()
         return self.result
+
     @abstractmethod
     def check_and_get_available_article(self, soup):
         pass
@@ -198,8 +202,8 @@ class ArticleParser(ABC):
                 except AttributeError:
                     article_rating = None
                 article_author_rating = soup.find(class_="tm-votes-lever__score-counter "
-                                                              "tm-votes-lever__score-counter_rating "
-                                                              "tm-votes-lever__score-counter").text
+                                                         "tm-votes-lever__score-counter_rating "
+                                                         "tm-votes-lever__score-counter").text
                 article_bookmark = soup.find(class_="bookmarks-button__counter").text
 
                 all_comments = soup_comments.find_all(class_="tm-comment-thread")
@@ -262,17 +266,17 @@ class ParsingOneArticle(ArticleParser):
 
 
 class ParsingListArticles(ArticleParser):
-    def __init__(self, searching_keyword='', searching_filter="relevance"):
+    def __init__(self, searching_keyword='', searching_filter="relevance", user_id=''):
         super().__init__()
         self.searching_keyword = searching_keyword
         self.searching_filter = searching_filter
+        self.user_id = user_id
 
     def check_and_get_available_article(self):
         no_articles = self.search_result.find("div", class_="tm-empty-placeholder__text")
         if no_articles:
             self.no_articles = True
         self.search_result = self.search_result.find_all("article", class_="tm-articles-list__item")
-
 
     def get_article_url(self):
         if self.no_articles:
@@ -288,7 +292,6 @@ class ParsingListArticles(ArticleParser):
                     {"article_link": article_link,
                      "article_comments": article_comments}
                 )
-
 
 # a = ParsingListArticles(searching_keyword='Postman')
 # result = a.start_parsing()

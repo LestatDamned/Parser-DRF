@@ -18,34 +18,26 @@ def start_parser(searching_key, user_id, search_id):
 
 @shared_task(bind=True, name="parsing_list_articles")
 def start_list_parser(self, searching_key, user_id, search_id):
+    print("parsing")
     channel_layer = get_channel_layer()
-    self.update_state(state="PARSING")
-    async_to_sync(channel_layer.group_send)(
-        f'user_{user_id}',
-        {
-            'type': 'parsing_status',
-            'status': "PARSING",
-            'task_id': self.request.id,
-            'result_id': search_id,
-        }
-    )
-    parsing = ParsingListArticles(searching_keyword = searching_key)
+
+    parsing = ParsingListArticles(searching_keyword = searching_key, user_id = user_id)
     result = parsing.start_parsing()
-    total_articles = len(result)
 
 
     for number, article in enumerate(result, start=1):
+
         parsing_result_unpacking(article, user_id, search_id)
-        # self.update_state(state="PROGRESS", meta={"number": number, "total": total_articles})
-        # async_to_sync(channel_layer.group_send)(
-        #     f'user_{user_id}',
-        #     {
-        #         'type': 'parsing_status',
-        #         'status': "PROGRESS",
-        #         'task_id': self.request.id,
-        #         'result_id': search_id,
-        #     }
-        # )
+        self.update_state(state="FINISHED")
+        async_to_sync(channel_layer.group_send)(
+            f'user_{user_id}',
+            {
+                'type': 'parsing_status',
+                'status': "FINISHED",
+                'task_id': self.request.id,
+                'result_id': search_id,
+            }
+        )
         return search_id
 
 
