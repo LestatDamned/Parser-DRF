@@ -7,5 +7,4 @@ __pycache__/
 app/db.sqlite3
 cache/
 .idea/
-app/ParserdjangoProject/settings/default_settings.py
 .env.test
