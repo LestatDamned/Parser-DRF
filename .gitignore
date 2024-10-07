@@ -8,3 +8,5 @@ app/db.sqlite3
 cache/
 .idea/
 .env.test
+app/ParserdjangoProject/settings/local_settings.py
+
