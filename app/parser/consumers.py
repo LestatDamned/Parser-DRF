@@ -1,8 +1,6 @@
 import json
 
-from celery.result import AsyncResult
-from channels.consumer import AsyncConsumer
-from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
 
 
 class ParsingStatusConsumer(AsyncWebsocketConsumer):
@@ -16,13 +14,12 @@ class ParsingStatusConsumer(AsyncWebsocketConsumer):
             self.channel_name,
         )
         await self.accept()
+        await self.send(text_data=json.dumps({
+            'message': f'WebSocket connection established! User: {self.user}, Group: {self.group_name}'
+        }))
 
     async def disconnect(self, close_code):
         await self.close()
-        # await self.channel_layer.group_discard(
-        #     self.group_name,
-        #     self.channel_name,
-        # )
 
     async def parsing_status(self, event):
         status = event['status']
@@ -37,30 +34,8 @@ class ParsingStatusConsumer(AsyncWebsocketConsumer):
     async def percent_message(self, event):
         message = event['message']
         await self.send(text_data=json.dumps({
-            'message': message,
+            'progress': message,
         }))
-        # task_result = AsyncResult(task_id)
-        # if task_result.state == 'PARSING':
-        #     await self.send(text_data=json.dumps({
-        #         "progress": "10%",
-        #         "status": task_result.state,
-        #     }
-        #     ))
-        #
-        # elif task_result.state == "PROGRESS":
-        #     progress = task_result.info
-        #     current = progress.get('number', 0)
-        #     total = progress.get('total', 1)
-        #     await self.send(text_data=json.dumps({
-        #         "progress": current/total,
-        #         "status": status,
-        #     }))
-        # else:
-        #     await self.send(text_data=json.dumps({
-        #         'status': task_result,
-        #         'task_id': task_id,
-        #         'result_id': result_id
-        #     }))
 
 
 class TestConsumer(AsyncWebsocketConsumer):

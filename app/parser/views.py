@@ -1,19 +1,26 @@
-from celery.result import AsyncResult
-from django.http import HttpResponse
-from channels.layers import get_channel_layer, channel_layers
-from asgiref.sync import async_to_sync
+import enum
 
+from celery.result import AsyncResult
+from channels.layers import get_channel_layer
+from django.http import HttpResponse
 from rest_framework import status, generics, permissions
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Article, HistorySearch
+from .parser_script import send_progress
 from .serializers import (HistorySearchSerializer, ArticleDetailSerializer, ArticleSerializer, ParsingStatusSerializer,
                           UserSerializer)
 from .tasks import start_parser, start_list_parser
 
 channel_layer = get_channel_layer()
+
+
+class ParsingStates(enum.Enum):
+    PENDING = "PENDING"
+    FAILURE = "FAILURE"
+    SUCCESS = "SUCCESS"
 
 
 def index(request):
@@ -37,18 +44,13 @@ class StartParsing(APIView):
         search_key = serializer.data["searching_key"]
         if serializer.data["parsing_options"] == "list":
             task = start_list_parser.delay(search_key, self.request.user.id, instance.id)
-            async_to_sync(channel_layer.group_send)(
-                f'user_{self.request.user.id}',
-                {
-                    'type': 'parsing_status',
-                    'status': "ACCEPTED",
-                    'task_id': task.id,
-                    'result_id': "to be determent",
-                }
-            )
+            send_progress(user_id=self.request.user.id, task_id=task.id, task_state=task.state,
+                          type_message="parsing_status")
             return Response({"task_id": task.id}, status=status.HTTP_201_CREATED)
         elif serializer.data["parsing_options"] == "first":
             task = start_parser.delay(search_key, self.request.user.id, instance.id)
+            send_progress(user_id=self.request.user.id, task_id=task.id, task_state=task.state,
+                          type_message="parsing_status")
             return Response({"task_id": task.id}, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
@@ -62,11 +64,11 @@ class ParsingStatusAPI(APIView):
 
     def get(self, request, task_id):
         task = AsyncResult(task_id)
-        if task.state == "PENDING":
+        if task.state == ParsingStates.PENDING:
             return Response({"status": task.state}, status=status.HTTP_202_ACCEPTED)
-        elif task.state == "FAILURE":
+        elif task.state == ParsingStates.FAILURE:
             return Response({"status": task.state}, status=status.HTTP_400_BAD_REQUEST)
-        elif task.state == "SUCCESS":
+        elif task.state == ParsingStates.SUCCESS:
             return Response({"status": task.state, "result_id": task.result}, status=status.HTTP_202_ACCEPTED)
 
 

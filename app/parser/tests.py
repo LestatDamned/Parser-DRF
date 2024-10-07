@@ -1,9 +1,9 @@
-from django.urls import reverse
-from rest_framework import status
-from rest_framework.test import APITestCase
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
 
 from parser.models import HistorySearch, Article
 from parser.serializers import ArticleSerializer, HistorySearchSerializer, ArticleDetailSerializer

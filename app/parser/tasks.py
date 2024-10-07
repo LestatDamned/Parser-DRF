@@ -1,43 +1,34 @@
-from asgiref.sync import async_to_sync
 from celery import shared_task
-from celery.result import AsyncResult
-from channels.layers import get_channel_layer
 
-from .parser_script import parsing_one_article, parsing_list_articles, ParsingListArticles
 from .models import Article, User, HistorySearch
+from .parser_script import ParsingListArticles, ParsingOneArticle, send_progress
 
 
-@shared_task(name="parsing_one_article")
-def start_parser(searching_key, user_id, search_id):
-    result = parsing_one_article(searching_key)
+@shared_task(bind=True, name="parsing_one_article")
+def start_parser(self, searching_key, user_id, search_id):
+    parsing = ParsingOneArticle(searching_keyword=searching_key, user_id=user_id)
+    result = parsing.start_parsing()
 
-    parsing_result_unpacking(result, user_id, search_id)
+    for progress in range(2, 11):
+        send_progress(user_id=user_id, percent=((progress * 5) + 50), type_message="percent_message")
+
+    parsing_result_unpacking(result[0], user_id, search_id)
+
+    send_progress(user_id=user_id, task_id=self.request.id, result_id=search_id,
+                  type_message="parsing_status", task_state="FINISHED")
 
     return search_id
 
 
 @shared_task(bind=True, name="parsing_list_articles")
 def start_list_parser(self, searching_key, user_id, search_id):
-    print("parsing")
-    channel_layer = get_channel_layer()
-
-    parsing = ParsingListArticles(searching_keyword = searching_key, user_id = user_id)
+    parsing = ParsingListArticles(searching_keyword=searching_key, user_id=user_id)
     result = parsing.start_parsing()
 
-
     for number, article in enumerate(result, start=1):
-
         parsing_result_unpacking(article, user_id, search_id)
-        self.update_state(state="FINISHED")
-        async_to_sync(channel_layer.group_send)(
-            f'user_{user_id}',
-            {
-                'type': 'parsing_status',
-                'status': "FINISHED",
-                'task_id': self.request.id,
-                'result_id': search_id,
-            }
-        )
+        send_progress(user_id=user_id, task_id=self.request.id, result_id=search_id,
+                      type_message="parsing_status", task_state="FINISHED")
         return search_id
 
 
@@ -56,5 +47,3 @@ def parsing_result_unpacking(result, user_id, search_id):
         bookmarks=result["bookmarks"],
         comments=result["comments"],
     )
-
-

@@ -1,6 +1,6 @@
 amqp==5.2.0
 asgiref==3.8.1
-astroid==3.3.4
+astroid>=2.15.2,<3.0.0
 attrs==24.2.0
 autobahn==24.4.2
 Automat==24.8.1
@@ -50,7 +50,6 @@ pycodestyle==2.11.1
 pycparser==2.22
 pyflakes==3.1.0
 PyJWT==2.9.0
-pylint==3.3.1
 pyOpenSSL==24.2.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1

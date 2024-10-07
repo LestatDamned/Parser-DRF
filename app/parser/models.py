@@ -40,7 +40,7 @@ class Article(models.Model):
     author_rating = models.CharField(help_text="Рейтинг автора")
     content = models.CharField(help_text="Содержание стать")
     date = models.CharField(help_text="Дата публикации")
-    rating = models.CharField(help_text="Рейтинг статьи",null=True,blank=True)
+    rating = models.CharField(help_text="Рейтинг статьи", null=True, blank=True)
     bookmarks = models.CharField(help_text="Количество добавления в закладки")
     comments = models.CharField(help_text="Комментарии")
 
