@@ -7,6 +7,17 @@ from channels.layers import get_channel_layer
 
 
 def send_progress(user_id=None, percent=None, task_id=None, task_state=None, result_id=None, type_message=None):
+    """
+    Функция для отправления сообщений по Websocket.
+
+    :param user_id: ID пользователя котору отправляется сообщение.
+    :param percent: Процент выполнения задачи (для percent_message).
+    :param task_id: ID задачи которой мы отслеживаем (для parsing_status).
+    :param task_state: Состояние задачи которую отслеживаем (для parsing_status).
+    :param result_id: ID результата парсинга (для parsing_status).
+    :param type_message: Тип сообщения который мы хоти отправить.
+    """
+
     channel_layer = get_channel_layer()
     message_dict = {
         'percent_message': {
@@ -24,6 +35,23 @@ def send_progress(user_id=None, percent=None, task_id=None, task_state=None, res
 
 
 class ArticleParser(ABC):
+    """
+    Абстрактный класс для шаблона классов парсера.
+
+    Attributes:
+        url: Адрес для поиска статьи.
+        article_info: Список принимающий ссылки на конкретные статьи, если статей нет,
+        выводит сообщение об отсутствие статей.
+        soup: Экземпляр класса BeautifulSoup для парсинга статьи.
+        soup_comments: Экземпляр класса BeautifulSoup для парсинга комментариев.
+        searching_keyword: Поисковый запрос.
+        searching_filter: Фильтр поиска.
+        search_result: Словарь с распарсенной статьей.
+        no_articles: False по умолчанию, если статей нет то True.
+        result: Список с результатами парсинга.
+        user_id: ID пользователя, который запросил парсинг.
+    """
+
     def __init__(self):
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
@@ -37,12 +65,13 @@ class ArticleParser(ABC):
         self.searching_keyword = None
         self.searching_filter = "relevance"
         self.search_result = None
-        self.amount = None
         self.no_articles = False
         self.result = []
         self.user_id = None
 
     def start_parsing(self):
+        """Шаблон выполнения функций"""
+
         self.get_url_searching()
         self.check_and_get_available_article()
         self.get_article_url()
@@ -50,14 +79,18 @@ class ArticleParser(ABC):
         return self.result
 
     @abstractmethod
-    def check_and_get_available_article(self, soup):
+    def check_and_get_available_article(self):
+        """Проверяет если ли статьи по поисковому запросу"""
         pass
 
     @abstractmethod
-    def get_article_url(self, url):
+    def get_article_url(self):
+        """Находит ссылки на статьи"""
         pass
 
     def get_url_searching(self):
+        """Получает поисковый запрос и делает ссылку на поиск статьи"""
+
         url = f"https://habr.com/ru/search/?q={self.searching_keyword}&target_type=posts&order={self.searching_filter}"
         req = requests.get(url, headers=self.headers)
         src = req.text
@@ -65,8 +98,11 @@ class ArticleParser(ABC):
         send_progress(self.user_id, percent=10, type_message="percent_message")
 
     def parsing_template(self):
+        """Выполняет пасинг найденный статей"""
+
         send_progress(user_id=self.user_id, percent=50, type_message="percent_message")
-        if self.no_articles:
+
+        if self.no_articles:  # если нет статей, то выводится сообщение об отсутствии статей
             return print(self.article_info)
 
         else:
@@ -79,7 +115,7 @@ class ArticleParser(ABC):
                 soup_comments = BeautifulSoup(src_comments, "lxml")
 
                 article_title = soup.find(class_="tm-title tm-title_h1").text
-                article_body = soup.find("div", id="post-content-body").get_text(strip=True)
+                article_body = soup.find("div", id="post-content-body").text
                 article_author = soup.find(class_="tm-user-info__username").text
                 author_profile_link = soup.find(class_="tm-user-info__username")["href"]
                 article_author_profile = f"https://habr.com{author_profile_link}"
@@ -123,17 +159,20 @@ class ArticleParser(ABC):
                     "bookmarks": article_bookmark,
                     "comments": comment_list,
                 }
+
                 send_progress(user_id=self.user_id, percent=((progress * 5) + 50), type_message="percent_message")
 
                 self.result.append(result_dict)
 
 
 class ParsingOneArticle(ArticleParser):
+    """Класс парсера для парсинга первой статьи по поисковому запросу"""
+
     def __init__(self, searching_keyword=None, searching_filter="relevance", user_id=None):
         super().__init__()
         self.searching_keyword = searching_keyword
         self.searching_filter = searching_filter
-        self.search_result = ''
+        self.search_result = None
         self.user_id = user_id
 
     def check_and_get_available_article(self):
@@ -144,15 +183,20 @@ class ParsingOneArticle(ArticleParser):
         send_progress(self.user_id, percent=20, type_message="percent_message")
 
     def get_article_url(self):
-        self.article_info = []
-        self.article_info.append(
-            {"article_link": f"https://habr.com{self.search_result}",
-             "article_comments": f"https://habr.com{self.search_result}comments/"}
-        )
         send_progress(self.user_id, percent=30, type_message="percent_message")
+        self.article_info = []
+        if self.no_articles:
+            self.article_info = [{"message": "По вашему запросу статьи не найдены"}]
+        else:
+            self.article_info.append(
+                {"article_link": f"https://habr.com{self.search_result}",
+                 "article_comments": f"https://habr.com{self.search_result}comments/"}
+            )
 
 
 class ParsingListArticles(ArticleParser):
+    """Класс парсера для поиска первых десяти статей по поисковому запросу"""
+
     def __init__(self, searching_keyword=None, searching_filter="relevance", user_id=None):
         super().__init__()
         self.searching_keyword = searching_keyword
@@ -182,7 +226,3 @@ class ParsingListArticles(ArticleParser):
                     {"article_link": article_link,
                      "article_comments": article_comments}
                 )
-
-# a = ParsingListArticles(searching_keyword='Postman')
-# result = a.start_parsing()
-# print(result)

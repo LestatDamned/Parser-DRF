@@ -1,0 +1,26 @@
+{% extends "main.html" %}
+
+{% block content %}
+<h4 class="mb-4">Result</h4>
+{% if task_id %}
+<p>Задача запущена. ID задачи: {{task_id}}</p>
+<div class="list-group">
+    {% for article in articles %}
+    <h5 class="mb-1">{{ article.user }} </h5>
+    <h5 class="mb-1">{{ article.search_id }} </h5>
+    <h5 class="mb-1">{{ article.article_link }} </h5>
+    <h5 class="mb-1">{{ article.title }} </h5>
+    <h5 class="mb-1">{{ article.author_profile }} </h5>
+    <h5 class="mb-1">{{ article.author }} </h5>
+    <h5 class="mb-1">{{ article.author_rating }} </h5>
+    <h5 class="mb-1">{{ article.content }} </h5>
+    <h5 class="mb-1">{{ article.date }} </h5>
+    <h5 class="mb-1">{{ article.rating }} </h5>
+    <h5 class="mb-1">{{ article.bookmarks }} </h5>
+    <h5 class="mb-1">{{ article.comments }} </h5>
+    {% endfor %}
+</div>
+{% else %}
+<p> Нет информации о задаче.</p>
+{% endif %}
+{% endblock %}

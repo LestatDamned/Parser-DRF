@@ -13,6 +13,11 @@ urlpatterns = [
     path("api/v1/history/articles/", HistoryArticles.as_view(), name="parsing_articles"),
     path("api/v1/history/article/<int:pk>/", DetailArticleViewAPI.as_view(), name="detail_article"),
     path("api/v1/history/search/<int:pk>/", UserSearchHistoryAPI.as_view(), name="detail_history"),
+    path("register/", RegistrationUsersView.as_view(), name="register"),
+    path("parsing/", StartParsingView.as_view(), name="parsing"),
+    path("login/", AuthorizationUserView.as_view(), name="login"),
+    path("logout/", LogOutUserView.as_view(), name="logout"),
+    path("result/", ResultParsingView.as_view(), name="result"),
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("schema/swagger/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger"),
 

@@ -21,7 +21,7 @@ from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView, To
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/v1/drf-auth/", include("rest_framework.urls")),
+    path("api/v1/drf-auth/", include("rest_framework.urls"), name="login"),
     path("", include("parser.urls")),
     path("__debug__/", include(debug_toolbar.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),

@@ -4,6 +4,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 
 class ParsingStatusConsumer(AsyncWebsocketConsumer):
+    """Класс для передачи сообщений по Websocket"""
+
     async def connect(self):
         self.user = self.scope['user']
 
@@ -22,6 +24,8 @@ class ParsingStatusConsumer(AsyncWebsocketConsumer):
         await self.close()
 
     async def parsing_status(self, event):
+        """Отправка сообщения о статусе парсинга"""
+
         status = event['status']
         task_id = event['task_id']
         result_id = event['result_id']
@@ -32,6 +36,8 @@ class ParsingStatusConsumer(AsyncWebsocketConsumer):
         }))
 
     async def percent_message(self, event):
+        """Отправка сообщения о прессе парсинга в процентах"""
+
         message = event['message']
         await self.send(text_data=json.dumps({
             'progress': message,
