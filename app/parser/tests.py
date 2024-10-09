@@ -1,11 +1,12 @@
-from unittest.mock import patch
+import os.path
+from unittest.mock import patch, Mock
 
-from django.contrib.auth.models import User
-from django.urls import reverse
+from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from parser.models import HistorySearch, Article
+from parser.parser_script import ParsingOneArticle
 from parser.serializers import ArticleSerializer, HistorySearchSerializer, ArticleDetailSerializer
 from parser.views import ParsingStates
 
@@ -49,6 +50,9 @@ class ParsingStatusAPITestCase(APITestCase):
         self.assertEqual(response.data, {"status": mock_task.state, "result_id": mock_task.result})
 
 
+from django.contrib.auth.models import User
+
+
 class ParsingResultAPITestCase(APITestCase):
     def setUp(self):
         self.user_test = User.objects.create(username="dabapps", email="dabapps@mail.ru")
@@ -84,6 +88,9 @@ class ParsingResultAPITestCase(APITestCase):
         self.assertEqual(response.data, {"articles": ArticleSerializer(result, many=True).data})
 
 
+from django.urls import reverse
+
+
 class HistorySearchAPITestCase(APITestCase):
     def setUp(self):
         self.user_test = User.objects.create(username="dabapps", email="dabapps@mail.ru")
@@ -106,6 +113,9 @@ class HistorySearchAPITestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_data)
+
+
+from rest_framework.test import APITestCase
 
 
 class HistoryArticleAPITestCase(APITestCase):
@@ -172,7 +182,7 @@ class DetailHistoryAPITestCase(APITestCase):
 class CreateUserAPITestCase(APITestCase):
     def test_create_user(self):
         url = reverse("create_user")
-        data = {"username": "test", "password": "12345", "email":"test@test.ru"}
+        data = {"username": "test", "password": "12345", "email": "test@test.ru"}
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(User.objects.count(), 1)
@@ -192,19 +202,72 @@ class JWTauthenticationAPITestCase(APITestCase):
         self.assertTrue(response.data["access"])
 
 
-class StartParsingAPITestCase(APITestCase):
+class PasringClassTestCase(TestCase):
     def setUp(self):
-        self.user_test = User.objects.create(username="dabapps", email="dabapps@mail.ru")
-        self.user_test.set_password("12345")
-        self.user_test.save()
-        self.client.force_authenticate(user=self.user_test)
+        self.parser = ParsingOneArticle(searching_keyword="Python", user_id=1)
+        self.mock_folder = os.path.join(os.path.dirname(__file__), 'mock')
 
-        self.history_search = HistorySearch.objects.create(user=self.user_test, searching_key="django",
-                                                           searching_filter="relevance", parsing_options="first")
-        self.history_search_list = HistorySearch.objects.create(user=self.user_test, searching_key="django",
-                                                                searching_filter="relevance",
-                                                                parsing_options="list")
-    #
+    @patch('requests.get')
+    def test_parsing_one_article(self, mock_get):
+        with open(os.path.join(self.mock_folder, 'mock_test_list_articles.html'), 'r', encoding='utf-8') as f:
+            html_content = f.read()
+
+        with open(os.path.join(self.mock_folder, 'mock_test_article.html'), 'r', encoding='utf-8') as f:
+            html_content2 = f.read()
+
+        with open(os.path.join(self.mock_folder, 'mock_test_article_comment.html'), 'r', encoding='utf-8') as f:
+            html_content3 = f.read()
+
+        mock_get.side_effect = [
+            Mock(text=html_content),
+            Mock(text=html_content2),
+            Mock(text=html_content3),
+        ]
+
+        result = self.parser.start_parsing()
+        print(result)
+
+#
+#
+# class ParsingClassTestCase(TestCase):
+#     def setUp(self):
+#         self.user_id = 1
+#         self.parser = ParsingOneArticle(searching_keyword="django", user_id=self.user_id)
+#         self.mock_folder = os.path.join(os.path.dirname(__file__), "mock")
+#
+#     def get_mock_html(self, filename):
+#         with open(os.path.join(self.mock_folder, filename), 'r', encoding='utf-8') as f:
+#             return f.read()
+#
+#     @patch("parser.parser_script.send_progress")
+#     @patch("parser.parser_script.ParsingOneArticle")
+#     @patch("parser.parser_script.requests.get")
+#     def test_parsing_one_article(self, mock_parsing_one_article, mock_send_progress, mock_get):
+#         mock_get = MagicMock()
+#         mock_get.return_value.text = os.path.join(os.path.dirname(self.mock_folder),"mock_test_list_articles.html")
+#         # mock_get.return_value = self.get_mock_html("mock_test_article.html")
+#         # mock_get.return_value = self.get_mock_html("mock_test_article_comment.html")
+#
+#
+#
+#         result = self.parser.start_parsing()
+#         print(result)
+
+
+#
+# class StartParsingAPITestCase(APITestCase):
+#     def setUp(self):
+#         self.user_test = User.objects.create(username="dabapps", email="dabapps@mail.ru")
+#         self.user_test.set_password("12345")
+#         self.user_test.save()
+#         self.client.force_authenticate(user=self.user_test)
+#
+#         self.history_search = HistorySearch.objects.create(user=self.user_test, searching_key="django",
+#                                                            searching_filter="relevance", parsing_options="first")
+#         self.history_search_list = HistorySearch.objects.create(user=self.user_test, searching_key="django",
+#                                                                 searching_filter="relevance",
+#                                                                 parsing_options="list")
+#
     # @patch("parser.tasks.start_parser")
     # def test_start_parsing(self, mock_start_parser):
     #     mock_task = mock_start_parser.return_value
@@ -236,4 +299,3 @@ class StartParsingAPITestCase(APITestCase):
     #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
     #     self.assertEqual(response.data, {"task_id": "test_task_id"})
     #
-
