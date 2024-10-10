@@ -228,33 +228,6 @@ class PasringClassTestCase(TestCase):
         print(result)
 
 #
-#
-# class ParsingClassTestCase(TestCase):
-#     def setUp(self):
-#         self.user_id = 1
-#         self.parser = ParsingOneArticle(searching_keyword="django", user_id=self.user_id)
-#         self.mock_folder = os.path.join(os.path.dirname(__file__), "mock")
-#
-#     def get_mock_html(self, filename):
-#         with open(os.path.join(self.mock_folder, filename), 'r', encoding='utf-8') as f:
-#             return f.read()
-#
-#     @patch("parser.parser_script.send_progress")
-#     @patch("parser.parser_script.ParsingOneArticle")
-#     @patch("parser.parser_script.requests.get")
-#     def test_parsing_one_article(self, mock_parsing_one_article, mock_send_progress, mock_get):
-#         mock_get = MagicMock()
-#         mock_get.return_value.text = os.path.join(os.path.dirname(self.mock_folder),"mock_test_list_articles.html")
-#         # mock_get.return_value = self.get_mock_html("mock_test_article.html")
-#         # mock_get.return_value = self.get_mock_html("mock_test_article_comment.html")
-#
-#
-#
-#         result = self.parser.start_parsing()
-#         print(result)
-
-
-#
 # class StartParsingAPITestCase(APITestCase):
 #     def setUp(self):
 #         self.user_test = User.objects.create(username="dabapps", email="dabapps@mail.ru")
@@ -268,34 +241,34 @@ class PasringClassTestCase(TestCase):
 #                                                                 searching_filter="relevance",
 #                                                                 parsing_options="list")
 #
-    # @patch("parser.tasks.start_parser")
-    # def test_start_parsing(self, mock_start_parser):
-    #     mock_task = mock_start_parser.return_value
-    #     mock_task.id = "test_task_id"
-    #
-    #
-    #     url = reverse("start_parsing")
-    #     data = {
-    #         "searching_key": "test-key",
-    #         "parsing_options": "first",
-    #
-    #     }
-    #
-    #     response = self.client.post(url, data, format="json")
-    #
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(response.data, {"task_id": "test_task_id"})
+# @patch("parser.tasks.start_parser")
+# def test_start_parsing(self, mock_start_parser):
+#     mock_task = mock_start_parser.return_value
+#     mock_task.id = "test_task_id"
+#
+#
+#     url = reverse("start_parsing")
+#     data = {
+#         "searching_key": "test-key",
+#         "parsing_options": "first",
+#
+#     }
+#
+#     response = self.client.post(url, data, format="json")
+#
+#     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+#     self.assertEqual(response.data, {"task_id": "test_task_id"})
 
-    # @patch("parser.views.start_list_parser")
-    # def test_start_list_parser(self,mock_start_list_parser):
-    #     mock_task = mock_start_list_parser.return_value
-    #     mock_task.task_id = "test_task_id"
-    #
-    #     url = reverse("start_parsing")
-    #     response = self.client.post(url, {"user": self.history_search.user.id,
-    #                                      "searching_key": self.history_search.searching_key,
-    #                                      "searching_filter": self.history_search.searching_filter,
-    #                                      "parsing_options": self.history_search.parsing_options})
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    #     self.assertEqual(response.data, {"task_id": "test_task_id"})
-    #
+# @patch("parser.views.start_list_parser")
+# def test_start_list_parser(self,mock_start_list_parser):
+#     mock_task = mock_start_list_parser.return_value
+#     mock_task.task_id = "test_task_id"
+#
+#     url = reverse("start_parsing")
+#     response = self.client.post(url, {"user": self.history_search.user.id,
+#                                      "searching_key": self.history_search.searching_key,
+#                                      "searching_filter": self.history_search.searching_filter,
+#                                      "parsing_options": self.history_search.parsing_options})
+#     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+#     self.assertEqual(response.data, {"task_id": "test_task_id"})
+#

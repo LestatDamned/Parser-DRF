@@ -1,26 +1,55 @@
 {% extends "main.html" %}
 
 {% block content %}
-<h4 class="mb-4">Result</h4>
+<h3 class="mb-4">Result</h3>
 {% if task_id %}
-<p>Задача запущена. ID задачи: {{task_id}}</p>
+<div class="table-responsive" id="percent">
+    <p class="alert alert-info">Задача запущена. ID задачи: {{task_id}} </p>
+</div>
+<h4>Статус парсинга</h4>
+<div id="status" class="alert alert-secondary"></div>
+<div id="progress" class="alert alert-warning"></div>
 <div class="list-group">
     {% for article in articles %}
-    <h5 class="mb-1">{{ article.user }} </h5>
-    <h5 class="mb-1">{{ article.search_id }} </h5>
-    <h5 class="mb-1">{{ article.article_link }} </h5>
-    <h5 class="mb-1">{{ article.title }} </h5>
-    <h5 class="mb-1">{{ article.author_profile }} </h5>
-    <h5 class="mb-1">{{ article.author }} </h5>
-    <h5 class="mb-1">{{ article.author_rating }} </h5>
-    <h5 class="mb-1">{{ article.content }} </h5>
-    <h5 class="mb-1">{{ article.date }} </h5>
-    <h5 class="mb-1">{{ article.rating }} </h5>
-    <h5 class="mb-1">{{ article.bookmarks }} </h5>
-    <h5 class="mb-1">{{ article.comments }} </h5>
+    <div class="list-group-item">
+        <h6 class="mb-1"><strong>Пользователь:</strong> {{article.user}}</h6>
+        <h6 class="mb-1"><strong>ID Поиска:</strong> {{article.search_id}}</h6>
+        <h6 class="mb-1"><strong>Ссылка на статью:</strong> {{article.article_link}}</h6>
+        <h6 class="mb-1"><strong>Название:</strong> {{article.title}}</h6>
+        <h6 class="mb-1"><strong>Профиль автора:</strong> {{article.author_profile}}</h6>
+        <h6 class="mb-1"><strong>Автор:</strong> {{article.author}}</h6>
+        <h6 class="mb-1"><strong>Рейтинг автора:</strong> {{article.author_rating}}</h6>
+        <h6 class="mb-1"><strong>Содержание:</strong> {{article.content}}</h6>
+        <h6 class="mb-1"><strong>Дата:</strong> {{article.date}}</h6>
+        <h6 class="mb-1"><strong>Рейтинг:</strong> {{article.rating}}</h6>
+        <h6 class="mb-1"><strong>Закладки:</strong> {{article.bookmarks}}</h6>
+        <h6 class="mb-1"><strong>Комментарии:</strong> {{article.comments}}</h6>
+    </div>
     {% endfor %}
 </div>
 {% else %}
-<p> Нет информации о задаче.</p>
+<p class="alert alert-danger">Нет информации о задаче.</p>
 {% endif %}
+
+<script>
+    var socket = new WebSocket('ws://localhost:8000/ws/notification/?token={{token}}')
+
+    socket.onopen = function (event) {
+        console.log('WebSocket connection established:', event);
+    };
+
+    socket.onmessage = function (event) {
+        var data = JSON.parse(event.data);
+        console.log('Message from server:', data);
+
+        if (data.status) {
+            document.getElementById("status").innerText = `Статус парсинга: ${data.status}, Task ID: ${data.task_id},
+            Result ID: ${data.result_id}`;
+        }
+
+        if (data.progress) {
+            document.getElementById("progress").innerText = `Прогресс: ${data.progress}`;
+        }
+    };
+</script>
 {% endblock %}

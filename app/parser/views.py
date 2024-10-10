@@ -2,7 +2,6 @@ import enum
 
 import requests
 from celery.result import AsyncResult
-from channels.layers import get_channel_layer
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponse
@@ -20,8 +19,6 @@ from .parser_script import send_progress
 from .serializers import (HistorySearchSerializer, ArticleDetailSerializer, ArticleSerializer, ParsingStatusSerializer,
                           UserSerializer)
 from .tasks import start_parser, start_list_parser
-
-channel_layer = get_channel_layer()
 
 
 class ParsingStates(enum.Enum):
@@ -196,9 +193,12 @@ class AuthorizationUserView(SuccessMessageMixin, LoginView):
         user = self.request.user
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
 
         response.set_cookie("access_token", access_token, httponly=True)
-        response.set_cookie("refresh_token", access_token, httponly=True)
+        response.set_cookie("refresh_token", refresh_token, httponly=True)
+        self.request.session["access_token"] = access_token
+        self.request.session["refresh_token"] = refresh_token
         return response
 
 
@@ -223,5 +223,7 @@ class ResultParsingView(generic.ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         task_id = self.request.session.get("task_id")
+        token = self.request.session.get("access_token")
         context["task_id"] = task_id
+        context["token"] = token
         return context
