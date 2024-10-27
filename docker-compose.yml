@@ -2,23 +2,33 @@
 name: parser-drf
 
 services:
-#  web:
-#    # Указываем директорию ./app, в которой содержится Dockerfile для сборки образа
-#    build: ./app
-#    # Запускаем встроенный сервер Django
-#    command: python manage.py runserver 0.0.0.0:8000
-#    # Пробрасываем 8000 порт контейнера на 8000 порт локалхоста(127.0.0.1:8000)
-#    ports:
-#      - "127.0.0.1:8000:8000"
-#    # Файл содержащий переменные окружения для контейнера
-#    env_file:
-#      - .env
-#    environment:
-#      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
-#    # Дожидаемся запуска контейнера db
-#    depends_on:
-#      - db
+  web:
+    # Указываем директорию ./app, в которой содержится Dockerfile для сборки образа
+    build: ./app
+    # Запускаем встроенный сервер Django
+    command: gunicorn ParserdjangoProject.wsgi:application --bind 0.0.0.0:8000
+    # Примонтируем том static-data к директории /home/app/web/static контейнера web
+    volumes:
+      - static-data:/home/app/web/static
+    # Пробрасываем 8000 порт контейнера на 8000 порт локалхоста(127.0.0.1:8000)
+    ports:
+      - "127.0.0.1:8000:8000"
+    # Файл содержащий переменные окружения для контейнера
+    env_file:
+      - .env
+    environment:
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
+    # Дожидаемся запуска контейнера db
+    depends_on:
+      - db
 
+  daphne:
+    build: .
+    command: daphne -u /tmp/daphne.sock ParserdjangoProject.asgi:application
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
   db:
     # Берём образ БД PostgreSQL версии 15
     image: postgres:15
@@ -39,27 +49,42 @@ services:
   redis:
     image: redis:alpine
 
-#  celery:
-#    build:
-#      context: ./app
-#      dockerfile: Dockerfile
-#    command: ["celery", "-A", "ParserdjangoProject", "worker", "--loglevel=info",
-#              "./wait-for-it.sh", "db:5432", "--", "python", "manage.py", "migrate"]
-#    volumes:
-#      - .:/app
-#    depends_on:
-#      - redis
-#      - db
+  celery:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    command: ["celery", "-A", "ParserdjangoProject", "worker", "--loglevel=info"]
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
 
-#  swagger:
-#    image: swaggerapi/swagger-ui
-#    environment:
-#      API_URL: http://localhost:8000/schema/swagger/
-#    ports:
-#      - "8080:8080"
-#    depends_on:
-#      - web
+  swagger:
+    image: swaggerapi/swagger-ui
+    environment:
+      API_URL: http://web:8000/schema/swagger/
+    ports:
+      - "8080:8080"
+    depends_on:
+      - web
+
+
+  nginx:
+    # Указываем директорию ./nginx, в которой содержится Dockerfile для сборки образа
+    build: ./nginx
+    # Примонтируем том static-data к директории /home/app/web/static контейнера nginx
+    volumes:
+      - static-data:/home/app/web/static
+    # Пробрасываем 80 порт контейнера на 80 порт локальной машины(порт будет доступен из вне)
+    ports:
+      - 80:80
+    # Дожидаемся запуска контейнера web
+    depends_on:
+      - web
 
 volumes:
   # Объявляем том postgres-data для хранения данных PostgreSQL
   postgres-data:
+  # Объявляем том static-data для хранения статических файлов
+  static-data:
